@@ -30,7 +30,71 @@
 //TL;DR: If you are new, just uncomment the 'move' function that you think sounds like fun!
 //       (and comment out all the other move functions)
 
+// // The "Peters "
+  var charging = false;
 
+var move = function(gameData, helpers) {
+  
+  var getInfo = function(tileType) {
+  var result = {};
+  
+     var healthWellStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero,
+               function(boardTile) {
+                     if (boardTile.type === tileType) {
+                          return true;
+                     }
+               });
+    result.distanceTo = healthWellStats.distance;
+    result.directionTo = healthWellStats.direction;
+    
+    return result;
+  };
+  
+  
+  var myHero = gameData.activeHero;
+
+  //Get stats on the nearest health well
+
+  if ( myHero.health > 90)  {
+    charging = false;
+  }
+
+  var heal = getInfo('HealthWell');
+  
+  if ((myHero.health < 50) || ((myHero.health < 90) && (heal.distanceTo == 1))) {  // heal only
+//Heal no matter what if low health
+    charging = true;
+    return heal.directionTo;
+  } else if (myHero.health < 70) {  // hunt diamonds
+     return helpers.findNearestNonTeamDiamondMine(gameData);
+  } else { // hunt enemy or heal
+    if (helpers.findNearestWeakerEnemy(gameData) != false) {
+        return helpers.findNearestWeakerEnemy(gameData);
+    } else if (helpers.findNearestNonTeamDiamondMine(gameData) != false) {
+        return helpers.findNearestNonTeamDiamondMine(gameData);
+    } else if (helpers.findNearestUnownedDiamondMine(gameData) != false) {
+        return helpers.findNearestUnownedDiamondMine(gameData);
+ //   } else if (helpers.findNearestTeamMember(gameData) != false) {
+ //       return helpers.findNearestTeamMember(gameData);      
+    } else {
+      var choices = ['North', 'South', 'East', 'West'];
+      return choices[Math.floor(Math.random()*4)];
+    }
+   
+  }
+/*  if (myHero.health < 40) {
+    //Heal no matter what if low health
+    return directionToHealthWell;
+  } else if (myHero.health < 100 && distanceToHealthWell === 1) {
+    //Heal if you aren't full health and are close to a health well already
+    return directionToHealthWell;
+  } else {
+    //If healthy, go capture a diamond mine!
+    return helpers.findNearestNonTeamDiamondMine(gameData);
+  }
+*/  
+  
+};
 // // The "Northerner"
 // // This hero will walk North.  Always.
 // var move = function(gameData, helpers) {
@@ -80,7 +144,7 @@
 // };
 
 // // The "Safe Diamond Miner"
-var move = function(gameData, helpers) {
+/*var move = function(gameData, helpers) {
   var myHero = gameData.activeHero;
 
   //Get stats on the nearest health well
@@ -104,7 +168,7 @@ var move = function(gameData, helpers) {
     return helpers.findNearestNonTeamDiamondMine(gameData);
   }
 };
-
+*/
 // // The "Selfish Diamond Miner"
 // // This hero will attempt to capture diamond mines (even those owned by teammates).
 // var move = function(gameData, helpers) {
