@@ -39,11 +39,9 @@ var move = function(gameData, helpers) {
   var result = {};
   
      var healthWellStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero,
-               function(boardTile) {
-                     if (boardTile.type === tileType) {
-                          return true;
-                     }
-               });
+                function(Tile) {
+    return Tile.type === tileType;
+  });
     result.distanceTo = healthWellStats.distance;
     result.directionTo = healthWellStats.direction;
     
