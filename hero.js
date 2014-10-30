@@ -65,7 +65,7 @@ var move = function(gameData, helpers) {
 //	console.log("healing");
     return heal.directionTo;
   } else if (myHero.health < 70) {  // hunt diamonds
-     if (typeof helpers.findNearestNonTeamDiamondMine(gameData) != 'undefined')) {
+     if (typeof helpers.findNearestNonTeamDiamondMine(gameData) != 'undefined') {
 //	console.log("nearset non team 70");
        return helpers.findNearestNonTeamDiamondMine(gameData);
      } else if (typeof helpers.findNearestUnownedDiamondMine(gameData) != 'undefined') {
