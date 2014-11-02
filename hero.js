@@ -30,8 +30,6 @@
 //TL;DR: If you are new, just uncomment the 'move' function that you think sounds like fun!
 //       (and comment out all the other move functions)
 
-// // The "Peters "
-  var charging = false;
 
 var move = function(gameData, helpers) {
   
@@ -50,50 +48,98 @@ var move = function(gameData, helpers) {
   
   
   var myHero = gameData.activeHero;
-
-  //Get stats on the nearest health well
-
-  if ( myHero.health > 90)  {
-    charging = false;
+  
+  isDefined = function (value) {
+    result = {
+            direction: "",
+            distance: 1000000,
+            coords: 0
+          };;
+    
+    if ((typeof value != 'undefined') && (value != false))
+      result = value;
+    
+   return result; 
   }
 
+  randomDirection = function() {
+     var choices = ['North', 'South', 'East', 'West'];
+//      console.log("random 90");
+      return choices[Math.floor(Math.random()*4)];
+  }
+  
+  nearestOf = function(a,b,c) {
+    
+    if ((a.distance <= b.distance) && (a.distance <= c.distance)) {
+      return a;
+    }
+    if ((b.distance <= a.distance) && (b.distance <= c.distance)) {
+      return b;
+    }
+    if ((c.distance <= a.distance) && (c.distance <= b.distance))
+      return c;
+    
+  }
+  
   var heal = getInfo('HealthWell');
+  var NearestNonTeamDiamondMine = isDefined(helpers.findNearestNonTeamDiamondMine(gameData));
+  var NearestUnownedDiamondMine = isDefined(helpers.findNearestUnownedDiamondMine(gameData));
+  var NearestWeakerEnemy = isDefined(helpers.findNearestWeakerEnemy(gameData));
+  
+//console.log(NearestNonTeamDiamondMine);
+//console.log(NearestUnownedDiamondMine);
+//console.log(NearestWeakerEnemy);
   
   if ((myHero.health < 50) || ((myHero.health < 90) && (heal.distanceTo == 1))) {  // heal only
 //Heal no matter what if low health
     charging = true;
-//	console.log("healing");
+//console.log("healing");
     return heal.directionTo;
   } else if (myHero.health < 70) {  // hunt diamonds
-     if (typeof helpers.findNearestNonTeamDiamondMine(gameData) != 'undefined') {
-//	console.log("nearset non team 70");
-       return helpers.findNearestNonTeamDiamondMine(gameData);
-     } else if (typeof helpers.findNearestUnownedDiamondMine(gameData) != 'undefined') {
-//	console.log("nearset unowned 70");
-        return helpers.findNearestUnownedDiamondMine(gameData);
-     } else {
-      var choices = ['North', 'South', 'East', 'West'];
-//	console.log("random 70");
-      return choices[Math.floor(Math.random()*4)];       
-    }
-  } else { // hunt enemy or heal
-      if ( typeof helpers.findNearestWeakerEnemy(gameData) != 'undefined') {
-//	console.log("nearset weakest 90"  + helpers.findNearestWeakerEnemy(gameData));
-        return helpers.findNearestWeakerEnemy(gameData);
-      } else if (typeof helpers.findNearestNonTeamDiamondMine(gameData) != 'undefined') {
-//	console.log("nonteam 90");
-        return helpers.findNearestNonTeamDiamondMine(gameData);
-      } else if (typeof helpers.findNearestUnownedDiamondMine(gameData) != 'undefined') {
-//	console.log("unowned 90");
-        return helpers.findNearestUnownedDiamondMine(gameData);
+//console.log("Mining");
+      if (NearestNonTeamDiamondMine.distance <= NearestUnownedDiamondMine.distance) {
+	if (NearestNonTeamDiamondMine.distance > 100000) {
+	  return randomDirection();
+	} else {
+	  return NearestNonTeamDiamondMine.direction;
+	}
       } else {
-      var choices = ['North', 'South', 'East', 'West'];
-//      console.log("random 90");
-      return choices[Math.floor(Math.random()*4)];
-    }
+	if (NearestUnownedDiamondMine.distance > 100000) {
+	  return randomDirection();
+	} else {
+	  return NearestUnownedDiamondMine.direction;
+	}
+      }
+  } else { // hunt enemy or heal
+//console.log("hunting");
+
+      if ((NearestWeakerEnemy.distance <= NearestNonTeamDiamondMine.distance) && (NearestWeakerEnemy.distance <= NearestUnownedDiamondMine.distance)) {
+	if (NearestWeakerEnemy.distance > 100000) {
+//console.log("random");
+	  return randomDirection();
+	} else {
+//console.log("enemy");  
+	  return NearestWeakerEnemy.direction;
+	}
+      } else {
+        if (NearestNonTeamDiamondMine.distance <= NearestUnownedDiamondMine.distance) {
+  	  if (NearestNonTeamDiamondMine.distance > 100000) {
+//console.log("random2");
+	    return randomDirection(); 
+	  } else {
+	    return NearestNonTeamDiamondMine.direction
+	  }
+	} else {
+	  if (NearestUnownedDiamondMine.distance > 100000) {
+	    return randomDirection();
+	  } else {
+	    NearestUnownedDiamondMine.direction
+	  }
+	}    
+     }
    
-  }
- 
+   }
+  
 };
 // // The "Northerner"
 // // This hero will walk North.  Always.
