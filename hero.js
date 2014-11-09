@@ -7,7 +7,7 @@
 
   module.exports = move;
 
-  The "move" function must return "North", "South", "East", "West", or "Stay"
+  The "move" function must result = "North", "South", "East", "West", or "Stay"
   (Anything else will be interpreted by the game as "Stay")
   
   The "move" function should accept two arguments that the website will be passing in: 
@@ -36,9 +36,9 @@ var move = function(gameData, helpers) {
   var getInfo = function(tileType) {
   var result = {};
   
-     var healthWellStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero,
+  var healthWellStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero,
                 function(Tile) {
-    return Tile.type === tileType;
+    result = Tile.type === tileType;
   });
     result.distanceTo = healthWellStats.distance;
     result.directionTo = healthWellStats.direction;
@@ -56,96 +56,102 @@ var move = function(gameData, helpers) {
             coords: 0
           };;
     
-    if ((typeof value != 'undefined') && (value != false))
+    if ((typeof value != 'undefined') && (value != false)) {
       result = value;
-    
+    }
+
    return result; 
   }
 
   randomDirection = function() {
      var choices = ['North', 'South', 'East', 'West'];
 //      console.log("random 90");
-      return choices[Math.floor(Math.random()*4)];
+  return choices[Math.floor(Math.random()*4)];
+  }
+  
+  oppositeDirection = function(a){
+   var choices= { "North" : "South", "East": "West", "South": "North", "West": "East"};
+    
+   return choices[a.direction];
+  }
+  
+  possible = function (a) {
+    return a.distance < 100000; // any distance greater than this is considered non existant
   }
   
   nearestOf = function(a,b,c) {
     
     if ((a.distance <= b.distance) && (a.distance <= c.distance)) {
-      return a;
+      result = a;
     }
     if ((b.distance <= a.distance) && (b.distance <= c.distance)) {
-      return b;
+      result = b;
     }
     if ((c.distance <= a.distance) && (c.distance <= b.distance))
-      return c;
+      result = c;
     
+   return result;   
   }
   
-  var heal = getInfo('HealthWell');
+  var heal = isDefined(helpers.findNearestHealthWell(gameData));
   var NearestNonTeamDiamondMine = isDefined(helpers.findNearestNonTeamDiamondMine(gameData));
   var NearestUnownedDiamondMine = isDefined(helpers.findNearestUnownedDiamondMine(gameData));
   var NearestWeakerEnemy = isDefined(helpers.findNearestWeakerEnemy(gameData));
+  var NearestEnemy = isDefined(helpers.findNearestEnemy(gameData)); 
+  
+  var result = randomDirection();
   
 //console.log(NearestNonTeamDiamondMine);
 //console.log(NearestUnownedDiamondMine);
 //console.log(NearestWeakerEnemy);
+//console.log(heal);
   
-  if ((myHero.health < 50) || ((myHero.health < 90) && (heal.distanceTo == 1))) {  // heal only
+  if ((myHero.health < 50) || ((myHero.health < 90) && (heal.distance == 1))) {  // heal only
 //Heal no matter what if low health
-    charging = true;
-//console.log("healing");
-    return heal.directionTo;
+    if (possible(heal)) {
+//console.log(heal.direction);
+      result = heal.direction;
+    } else if (possible(NearestEnemy)) {
+//console.log("running");
+      result = oppositeDirection(NearestEnemy);
+    }
   } else if (myHero.health < 70) {  // hunt diamonds
 //console.log("Mining");
+    if ((possible(NearestNonTeamDiamondMine)) || (possible(NearestUnownedDiamondMine))) {
       if (NearestNonTeamDiamondMine.distance <= NearestUnownedDiamondMine.distance) {
-	if (NearestNonTeamDiamondMine.distance > 100000) {
-	  return randomDirection();
-	} else {
-	  return NearestNonTeamDiamondMine.direction;
-	}
+	  result = NearestNonTeamDiamondMine.direction;
       } else {
-	if (NearestUnownedDiamondMine.distance > 100000) {
-	  return randomDirection();
-	} else {
-	  return NearestUnownedDiamondMine.direction;
-	}
+	  result = NearestUnownedDiamondMine.direction;
       }
+    }  
   } else { // hunt enemy or heal
 //console.log("hunting");
-
       if ((NearestWeakerEnemy.distance <= NearestNonTeamDiamondMine.distance) && (NearestWeakerEnemy.distance <= NearestUnownedDiamondMine.distance)) {
-	if (NearestWeakerEnemy.distance > 100000) {
-//console.log("random");
-	  return randomDirection();
-	} else {
-//console.log("enemy");  
-	  return NearestWeakerEnemy.direction;
+	if (possible(NearestWeakerEnemy)) {
+	  result = NearestWeakerEnemy.direction;
 	}
       } else {
         if (NearestNonTeamDiamondMine.distance <= NearestUnownedDiamondMine.distance) {
-  	  if (NearestNonTeamDiamondMine.distance > 100000) {
-//console.log("random2");
-	    return randomDirection(); 
-	  } else {
-	    return NearestNonTeamDiamondMine.direction
+  	  if (possible(NearestNonTeamDiamondMine)) {
+	    result = NearestNonTeamDiamondMine.direction
 	  }
 	} else {
-	  if (NearestUnownedDiamondMine.distance > 100000) {
-	    return randomDirection();
-	  } else {
-	    NearestUnownedDiamondMine.direction
+	  if (possible(NearestUnownedDiamondMine)) {
+	    result = NearestUnownedDiamondMine.direction
 	  }
 	}    
      }
    
    }
+//console.log(result);   
+   return result;
   
 };
 // // The "Northerner"
 // // This hero will walk North.  Always.
 // var move = function(gameData, helpers) {
 //   var myHero = gameData.activeHero;
-//   return 'North';
+//   result = 'North';
 // };
 
 // // The "Blind Man"
@@ -153,7 +159,7 @@ var move = function(gameData, helpers) {
 // var move = function(gameData, helpers) {
 //   var myHero = gameData.activeHero;
 //   var choices = ['North', 'South', 'East', 'West'];
-//   return choices[Math.floor(Math.random()*4)];
+//   result = choices[Math.floor(Math.random()*4)];
 // };
 
 // // The "Priest"
@@ -161,9 +167,9 @@ var move = function(gameData, helpers) {
 // var move = function(gameData, helpers) {
 //   var myHero = gameData.activeHero;
 //   if (myHero.health < 60) {
-//     return helpers.findNearestHealthWell(gameData);
+//     result = helpers.findNearestHealthWell(gameData);
 //   } else {
-//     return helpers.findNearestTeamMember(gameData);
+//     result = helpers.findNearestTeamMember(gameData);
 //   }
 // };
 
@@ -172,9 +178,9 @@ var move = function(gameData, helpers) {
 // var move = function(gameData, helpers) {
 //   var myHero = gameData.activeHero;
 //   if (myHero.health < 30) {
-//     return helpers.findNearestHealthWell(gameData);
+//     result = helpers.findNearestHealthWell(gameData);
 //   } else {
-//     return helpers.findNearestEnemy(gameData);
+//     result = helpers.findNearestEnemy(gameData);
 //   }
 // };
 
@@ -183,9 +189,9 @@ var move = function(gameData, helpers) {
 // var move = function(gameData, helpers) {
 //   var myHero = gameData.activeHero;
 //   if (myHero.health < 50) {
-//     return helpers.findNearestHealthWell(gameData);
+//     result = helpers.findNearestHealthWell(gameData);
 //   } else {
-//     return helpers.findNearestWeakerEnemy(gameData);
+//     result = helpers.findNearestWeakerEnemy(gameData);
 //   }
 // };
 
@@ -196,7 +202,7 @@ var move = function(gameData, helpers) {
   //Get stats on the nearest health well
   var healthWellStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero, function(boardTile) {
     if (boardTile.type === 'HealthWell') {
-      return true;
+      result = true;
     }
   });
   var distanceToHealthWell = healthWellStats.distance;
@@ -205,13 +211,13 @@ var move = function(gameData, helpers) {
 
   if (myHero.health < 40) {
     //Heal no matter what if low health
-    return directionToHealthWell;
+    result = directionToHealthWell;
   } else if (myHero.health < 100 && distanceToHealthWell === 1) {
     //Heal if you aren't full health and are close to a health well already
-    return directionToHealthWell;
+    result = directionToHealthWell;
   } else {
     //If healthy, go capture a diamond mine!
-    return helpers.findNearestNonTeamDiamondMine(gameData);
+    result = helpers.findNearestNonTeamDiamondMine(gameData);
   }
 };
 */
@@ -223,7 +229,7 @@ var move = function(gameData, helpers) {
 //   //Get stats on the nearest health well
 //   var healthWellStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero, function(boardTile) {
 //     if (boardTile.type === 'HealthWell') {
-//       return true;
+//       result = true;
 //     }
 //   });
 
@@ -232,20 +238,20 @@ var move = function(gameData, helpers) {
 
 //   if (myHero.health < 40) {
 //     //Heal no matter what if low health
-//     return directionToHealthWell;
+//     result = directionToHealthWell;
 //   } else if (myHero.health < 100 && distanceToHealthWell === 1) {
 //     //Heal if you aren't full health and are close to a health well already
-//     return directionToHealthWell;
+//     result = directionToHealthWell;
 //   } else {
 //     //If healthy, go capture a diamond mine!
-//     return helpers.findNearestUnownedDiamondMine(gameData);
+//     result = helpers.findNearestUnownedDiamondMine(gameData);
 //   }
 // };
 
 // // The "Coward"
 // // This hero will try really hard not to die.
 // var move = function(gameData, helpers) {
-//   return helpers.findNearestHealthWell(gameData);
+//   result = helpers.findNearestHealthWell(gameData);
 // }
 
 
